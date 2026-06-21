@@ -18,15 +18,25 @@ class KAutoServiceGradlePlugin : KotlinCompilerPluginSupportPlugin {
     override fun getCompilerPluginId(): String = "io.github.josephsanjaya.kautoservice"
 
     override fun getPluginArtifact(): SubpluginArtifact =
-        SubpluginArtifact("io.github.josephsanjaya.kautoservice", "kautoservice-compiler-plugin", "1.0.0")
+        SubpluginArtifact(
+            "io.github.josephsanjaya.kautoservice",
+            "kautoservice-compiler-plugin",
+            "1.0.0"
+        )
 
     override fun applyToCompilation(kotlinCompilation: KotlinCompilation<*>): Provider<List<SubpluginOption>> {
         val project = kotlinCompilation.target.project
         val extension = project.extensions.getByType(KAutoServiceExtension::class.java)
 
         // Inject the compiler plugin and annotation dependencies
-        project.dependencies.add("kotlinCompilerPluginClasspath", "io.github.josephsanjaya.kautoservice:kautoservice-compiler-plugin:1.0.0")
-        project.dependencies.add(kotlinCompilation.implementationConfigurationName, "io.github.josephsanjaya.kautoservice:kautoservice-annotations:1.0.0")
+        project.dependencies.add(
+            "kotlinCompilerPluginClasspath",
+            "io.github.josephsanjaya.kautoservice:kautoservice-compiler-plugin:1.0.0"
+        )
+        project.dependencies.add(
+            kotlinCompilation.defaultSourceSet.implementationConfigurationName,
+            "io.github.josephsanjaya.kautoservice:kautoservice-annotations:1.0.0"
+        )
 
         return project.provider {
             listOf(

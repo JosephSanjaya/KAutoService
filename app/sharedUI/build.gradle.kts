@@ -10,7 +10,7 @@ plugins {
 kotlin {
     jvm()
     
-    androidLibrary {
+    android {
        namespace = "io.github.josephsanjaya.kautoservice.app.sharedUI"
        compileSdk = libs.versions.android.compileSdk.get().toInt()
        minSdk = libs.versions.android.minSdk.get().toInt()

@@ -1,4 +1,5 @@
 rootProject.name = "KAutoService"
+gradle.startParameter.isConfigureOnDemand = false
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {

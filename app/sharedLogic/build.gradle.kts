@@ -29,7 +29,7 @@ kotlin {
         }
     }
     
-    androidLibrary {
+    android {
        namespace = "io.github.josephsanjaya.kautoservice.sharedLogic"
        compileSdk = libs.versions.android.compileSdk.get().toInt()
        minSdk = libs.versions.android.minSdk.get().toInt()
@@ -48,7 +48,6 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(projects.core)
-            // put your Multiplatform dependencies here
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
