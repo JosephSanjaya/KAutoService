@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "io.github.josephsanjaya.kautoservice"
-version = "1.0.0"
+version = providers.gradleProperty("kautoservice.version").getOrElse("1.0.0")
 
 val kotlinVersion = "2.4.0"
 
@@ -25,6 +25,29 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
+            pom {
+                name.set("KAutoService Compiler Plugin")
+                description.set("Kotlin K2 compiler plugin for generating META-INF/services files")
+                url.set("https://github.com/josephsanjaya/KAutoService")
+                licenses {
+                    license {
+                        name.set("Apache-2.0")
+                        url.set("https://www.apache.org/licenses/LICENSE-2.0")
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/josephsanjaya/KAutoService")
+            credentials {
+                username = providers.environmentVariable("GITHUB_ACTOR").orNull
+                    ?: System.getenv("GITHUB_ACTOR")
+                password = providers.environmentVariable("GITHUB_TOKEN").orNull
+                    ?: System.getenv("GITHUB_TOKEN")
+            }
         }
     }
 }

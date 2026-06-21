@@ -9,6 +9,12 @@ import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 
 class KAutoServiceGradlePlugin : KotlinCompilerPluginSupportPlugin {
 
+    companion object {
+        // Fallback used when running from source (e.g., mavenLocal) without a MANIFEST.MF entry.
+        const val PLUGIN_VERSION = "1.0.0"
+    }
+
+
     override fun apply(target: Project) {
         target.extensions.create("kautoservice", KAutoServiceExtension::class.java)
     }
@@ -17,25 +23,27 @@ class KAutoServiceGradlePlugin : KotlinCompilerPluginSupportPlugin {
 
     override fun getCompilerPluginId(): String = "io.github.josephsanjaya.kautoservice"
 
-    override fun getPluginArtifact(): SubpluginArtifact =
-        SubpluginArtifact(
+    override fun getPluginArtifact(): SubpluginArtifact {
+        val version = javaClass.`package`?.implementationVersion ?: PLUGIN_VERSION
+        return SubpluginArtifact(
             "io.github.josephsanjaya.kautoservice",
             "kautoservice-compiler-plugin",
-            "1.0.0"
+            version
         )
+    }
 
     override fun applyToCompilation(kotlinCompilation: KotlinCompilation<*>): Provider<List<SubpluginOption>> {
         val project = kotlinCompilation.target.project
         val extension = project.extensions.getByType(KAutoServiceExtension::class.java)
+        val version = javaClass.`package`?.implementationVersion ?: PLUGIN_VERSION
 
-        // Inject the compiler plugin and annotation dependencies
         project.dependencies.add(
             "kotlinCompilerPluginClasspath",
-            "io.github.josephsanjaya.kautoservice:kautoservice-compiler-plugin:1.0.0"
+            "io.github.josephsanjaya.kautoservice:kautoservice-compiler-plugin:$version"
         )
         project.dependencies.add(
             kotlinCompilation.defaultSourceSet.implementationConfigurationName,
-            "io.github.josephsanjaya.kautoservice:kautoservice-annotations:1.0.0"
+            "io.github.josephsanjaya.kautoservice:kautoservice-annotations:$version"
         )
 
         return project.provider {
