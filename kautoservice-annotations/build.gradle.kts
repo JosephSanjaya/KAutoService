@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "io.github.josephsanjaya.kautoservice"
-version = providers.gradleProperty("kautoservice.version").getOrElse("1.0.0")
+version = libs.versions.kautoservice.get()
 
 kotlin {
     jvm()

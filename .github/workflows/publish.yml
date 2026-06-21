@@ -55,6 +55,17 @@ jobs:
         id: version
         run: echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
+      # ── Sync version into libs.versions.toml from the tag ────────────────
+      # The TOML is the single source of truth. Both the plugin resolution
+      # (libs.plugins.kautoservice version) and the module version() call
+      # (libs.versions.kautoservice.get()) read from here.
+      - name: Patch version in libs.versions.toml
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          sed -i "s/^kautoservice = \".*\"/kautoservice = \"${VERSION}\"/" gradle/libs.versions.toml
+          echo "Version set to: $(grep '^kautoservice' gradle/libs.versions.toml)"
+
       # ── Build changelog from commits since the previous tag ───────────────
       - name: Build changelog
         id: changelog
@@ -64,8 +75,7 @@ jobs:
           # Find the most recent tag before this one; fall back to first commit
           PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -v "^${CURRENT_TAG}$" | head -1)
           if [ -z "$PREVIOUS_TAG" ]; then
-            RANGE=$(git rev-list --max-parents=0 HEAD)
-            RANGE="${RANGE}..HEAD"
+            RANGE="$(git rev-list --max-parents=0 HEAD)..HEAD"
           else
             RANGE="${PREVIOUS_TAG}..${CURRENT_TAG}"
           fi
@@ -74,12 +84,9 @@ jobs:
 
           # Format: "- <short-sha> <subject>" — exclude merge commits
           CHANGELOG=$(git log "$RANGE" --no-merges --pretty=format:"- %h %s" | head -100)
+          [ -z "$CHANGELOG" ] && CHANGELOG="- No changes recorded"
 
-          if [ -z "$CHANGELOG" ]; then
-            CHANGELOG="- No changes recorded"
-          fi
-
-          # Write to a temp file to handle multi-line output safely
+          # Write to a temp file to safely handle multi-line content
           CHANGELOG_FILE=$(mktemp)
           {
             echo "## What's changed"
@@ -93,8 +100,11 @@ jobs:
 
           echo "path=$CHANGELOG_FILE" >> "$GITHUB_OUTPUT"
 
-      # ── Publish to GitHub Packages ────────────────────────────────────────
-      - name: Publish to GitHub Packages
+      # ── Publish: annotations + compiler-plugin first, gradle-plugin last ──
+      # The gradle-plugin's SubpluginArtifact references the compiler-plugin, so
+      # annotations and compiler-plugin must land in the registry before the
+      # gradle-plugin is configured by other modules.
+      - name: Publish annotations and compiler plugin
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -102,8 +112,16 @@ jobs:
           ./gradlew \
             :kautoservice-annotations:publish \
             :kautoservice-compiler-plugin:publish \
+            --no-daemon \
+            --stacktrace
+
+      - name: Publish Gradle plugin
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./gradlew \
             :kautoservice-gradle-plugin:publish \
-            -Pkautoservice.version=${{ steps.version.outputs.value }} \
             --no-daemon \
             --stacktrace
 

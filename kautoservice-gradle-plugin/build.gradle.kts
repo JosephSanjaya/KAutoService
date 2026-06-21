@@ -1,11 +1,11 @@
 plugins {
-    alias(libs.plugins.kotlinJvm)
+    id("org.jetbrains.kotlin.jvm") version "2.4.0"
     `java-gradle-plugin`
     `maven-publish`
 }
 
 group = "io.github.josephsanjaya.kautoservice"
-version = providers.gradleProperty("kautoservice.version").getOrElse("1.0.0")
+version = libs.versions.kautoservice.get()
 
 val kotlinVersion = "2.4.0"
 
@@ -29,6 +29,7 @@ gradlePlugin {
     plugins {
         create("kautoservice") {
             id = "io.github.josephsanjaya.kautoservice"
+            version = libs.versions.kautoservice.get()
             implementationClass = "io.github.josephsanjaya.kautoservice.gradle.KAutoServiceGradlePlugin"
             displayName = "KAutoService Compiler Plugin"
             description = "Kotlin K2 compiler plugin successor to AutoService"
